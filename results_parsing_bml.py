@@ -105,7 +105,8 @@ plt.ylabel("Reported\nbiological motion [%]")
 plt.xlabel("Stimulus")
 sns.despine() #remove top and right box and make square
 plt.tight_layout()
-plt.savefig('MOPP figures/bml',dpi=800)
+plt.show()
+#plt.savefig('MOPP figures/bml',dpi=800)
 
 #d' prime analysis
 m_vs_r = np.subtract(res_dprime_b, res_dprime_r)
