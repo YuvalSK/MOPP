@@ -6,12 +6,13 @@ Created on Wed Sep 21 13:42:02 2022
 """
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 import scipy.stats as st
+from pingouin import bayesfactor_ttest
+
+import matplotlib.pyplot as plt
 from matplotlib.ticker import StrMethodFormatter
 import seaborn as sns
-from pingouin import bayesfactor_ttest
 
 df = pd.read_csv('Data/data_17.csv')
 
@@ -119,12 +120,15 @@ t1, pval1 = st.ttest_1samp(a=m_vs_r, popmean=0.73, alternative='two-sided')
 bf = bayesfactor_ttest(t1, len(subjects), 189, paired=False, alternative='two-sided')
 print(f'one-sample t-test: p = {pval1:.2f}, t = {t1:.2f}, BF = {bf:.2f}')
 
-#t2 ,pval2 = st.ttest_ind_from_stats(p*100, np.std(m_vs_r,ddof=1), len(subjects), 0.73, 0.1, nobs2, alternative='two-sided')
-#bf = bayesfactor_ttest(1.87, 16, 18, paired=False, alternative='two-sided')
-#print("Bayes Factor: %.3f (two-sample unpaired)" % bf)
-#np.savetxt("b.csv", res_dprime_b, delimiter=",")
-#np.savetxt("r.csv", res_dprime_r, delimiter=",")
+# two sample, for angry reviewer
+t2 ,pval2 = st.ttest_ind_from_stats(np.mean(m_vs_r), np.std(m_vs_r,ddof=1), len(subjects), 0.73, 0.1, 189, alternative='two-sided')
+bf2 = bayesfactor_ttest(t2, len(subjects), 189, paired=False, alternative='two-sided')
+print(f'two-sample t-test: p = {pval2:.2f}, t = {t2:.2f}, BF = {bf2:.2f}')
+
+
+
 '''
+draft code:
 #one-tailed tttest to see if BM higher than random
 rev_res_correct_r = [1-x for x in res_correct_r]
 st.ttest_ind(res_correct_b, rev_res_correct_r, alternative='greater')
