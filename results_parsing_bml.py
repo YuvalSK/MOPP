@@ -121,7 +121,7 @@ bf = bayesfactor_ttest(t1, len(subjects), 189, paired=False, alternative='two-si
 print(f'one-sample t-test: p = {pval1:.2f}, t = {t1:.2f}, BF = {bf:.2f}')
 
 # two sample, for angry reviewer
-t2 ,pval2 = st.ttest_ind_from_stats(np.mean(m_vs_r), np.std(m_vs_r,ddof=1), len(subjects), 0.73, 0.1, 189, alternative='two-sided')
+t2 ,pval2 = st.ttest_ind_from_stats(np.mean(m_vs_r), np.std(m_vs_r,ddof=1), len(subjects), 0.73, 0.1, 189, equal_var=False, alternative='two-sided')
 bf2 = bayesfactor_ttest(t2, len(subjects), 189, paired=False, alternative='two-sided')
 print(f'two-sample t-test: p = {pval2:.2f}, t = {t2:.2f}, BF = {bf2:.2f}')
 

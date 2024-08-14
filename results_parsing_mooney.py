@@ -180,16 +180,18 @@ print(f'Inverted vs. scrambeled: mean d ± SEM = {dmean_s:.2f} ± {err_s:.2f}')
 
 # two-sample unpaired t-test, one participant was removed
 t ,pval = ttest_ind_from_stats(dmean_u, np.std(u_vs_s, ddof=1), (len(subjects)-1), 
-                               1.78, 0.48, 19, 
+                               1.78, 0.45, 19,
+                               equal_var=False,
                                alternative='two-sided')
 bf = bayesfactor_ttest(t, (len(subjects)-1), 19, paired=False, alternative='two-sided')
-print(f'Upright vs. random:\ntwo-sample t-test: p = {pval}, t = {t:.2f}, BF = {bf:.2f}')
+print(f'Upright vs. random:\ntwo-sample t-test: p = {pval:.2f}, t = {t:.2f}, BF = {bf:.2f}')
 
 t2 ,pval2 = ttest_ind_from_stats(dmean_s, np.std(i_vs_s, ddof=1), (len(subjects)-1), 
-                               0.83, 0.48, 19, 
+                               0.83, 0.45, 19, 
+                               equal_var=False,
                                alternative='two-sided')
 bf2 = bayesfactor_ttest(t2, (len(subjects)-1), 19, paired=False, alternative='two-sided')
-print(f'Inverted vs. random:\ntwo-sample t-test: p = {pval2}, t = {t2:.2f}, BF = {bf2:.2f}')
+print(f'Inverted vs. random:\ntwo-sample t-test: p = {pval2:.2f}, t = {t2:.2f}, BF = {bf2:.2f}')
 
 
 ######################### additional draft code ##########################
