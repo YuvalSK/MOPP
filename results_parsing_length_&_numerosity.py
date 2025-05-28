@@ -3,14 +3,17 @@
 Created on Wed Sep 21 13:42:02 2022
 @author: YSK
 """
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import StrMethodFormatter
 
+import pandas as pd
+import numpy as np
 import math
 import scipy
 import scipy.stats as st
+from scipy.stats import ttest_rel
+from pingouin import bayesfactor_ttest
+
 import statsmodels.api as sm
 import seaborn as sns
 
@@ -67,11 +70,9 @@ for subject in subjects:
                 r_title = 'L-x' + str(subject)
                 df_res_l[r_title] = responses 
         
-
 # (1) analysing of the length task                
 del df_res_l["L-x10"] # subject 10 was missing three trials
 del df_res_l["L-x16"] # subject 16 was missing four trials
-
 
 df_res_l['s'] = l_stimuli # same stimulus was used
 df_res_l['x_mean'] = df_res_l.iloc[:, 0:-1].mean(axis=1)
@@ -95,7 +96,12 @@ plt.errorbar(df_res_l_without_dup['s'], df_res_l_without_dup['x_mean'], yerr=e1,
 x , y = df_res_l_without_dup['s'], df_res_l_without_dup['x_mean']
 m, b = np.polyfit(x, y, 1)
 slope, intercept, r_value, p_value, std_err = st.linregress(x, y)
-print(f'Length\nR square linear: {r_value**2:.2f}, \np value: {p_value} ')
+print(f'Length intercept:{intercept:.3f}, slope: {slope:.3f}\nR square linear: {r_value**2:.2f}, \np value: {p_value} ')
+
+X = sm.add_constant(x)
+mod = sm.OLS(y, X)
+res = mod.fit()
+print (res.conf_int(0.05))   # 95% confidence interval
 
 plt.plot(x, m*x+b, c='k')
 
@@ -103,25 +109,24 @@ lim = 20
 plt.plot([0,lim], [0,lim], c='gray', linestyle='--') #unity line
 
 # cosmetics
-plt.xlabel('Stimulus [A.U.]')
-plt.ylabel('Estimate [A.U.]')
+plt.xlabel('Stimulus [# Underbars]')
+plt.ylabel('Estimate [# Underbars]')
 sns.despine() # remove top and right box and make square
 plt.xlim([0,lim])
 plt.xticks(np.arange(0, 21, 5.0))
 plt.ylim([0,lim])
 plt.axis('scaled')
 plt.tight_layout()
-plt.show()
-#plt.savefig('Length.png',dpi=800)
+#plt.show()
+plt.savefig('MOPP figures/Length.png',dpi=800)
 
 
 # (2) analysing the numerosity task
-
 df_res_n['s'] = n_stimuli #same stimulus was used
 df_res_n['x_mean'] = df_res_n.iloc[:, 0:-1].mean(axis=1)
 df_res_n['x_SD'] = df_res_n.iloc[:, 0:-1].std(axis=1)
 
-df_res_n.duplicated(subset=['s']).value_counts() #eight magnitudes are duplicated
+df_res_n.duplicated(subset=['s']).value_counts() #16 unique and eight overlap
 # we pool over them to calculate the mean per stimuli across participants
 df_res_n_without_dup = df_res_n.groupby('s').mean().reset_index()
 
@@ -131,8 +136,14 @@ df_res_n_without_dup_10 = df_res_n_without_dup[df_res_n_without_dup.s > 10]
 x , y = df_res_n_without_dup_10['s'], df_res_n_without_dup_10['x_mean']
 t = np.log(x)
 p = np.polyfit(t, y, 1)
-slope, intercept, r_value, p_value, std_err = st.linregress(t, y)
-print(f'Numerosity\nR square log: {r_value**2:.2f} \np value: {p_value}')
+slope, intercept, r_value, p_value, std_err = st.linregress(t, np.log(y))
+print(f'Numerosity intercept:{intercept:.3f}, slope: {slope:.3f}\nR square: {r_value**2:.2f}, p-value: {p_value} ')
+
+X = sm.add_constant(t)
+mod = sm.OLS(np.log(y), X)
+res = mod.fit()
+print (res.conf_int(0.05))   # 95% confidence interval
+
 
 a = p[0] #intercept
 b = p[1] #slope
@@ -159,5 +170,10 @@ plt.tight_layout()
 
 plt.show()
 #plt.savefig('Numerosity.png',dpi=800)
+
+unity = np.linspace(0, np.max(y), len(y))
+t ,pval = ttest_rel(y, unity, alternative='greater')
+print(f'Mean estimates vs unity:\npaired t-test({len(y)-1}): p = {pval:.5f}, t = {t:.2f}')
+
     
         

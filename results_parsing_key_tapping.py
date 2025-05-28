@@ -90,28 +90,29 @@ t ,pval = ttest_rel(a['Right'], a['Left'], alternative='two-sided')
 bf = bayesfactor_ttest(t, a["Right"].count(), paired=True, alternative='two-sided')
 print(f'......Paired t-test left vs. right: p = {pval:.2f}, t = {t:.2f}, BF = {bf:.2f}')
 
-# pooling over a single hand analysis
+# comparing with literature - Noyce et al., 2014
+## pooling over a single hand analysis
 pooled_mean = counts[['Right','Left']].stack().mean()
-sd_mean = counts[['Right','Left']].stack().std(ddof=1)
-count_mean = counts[['Right','Left']].stack().count()
-print(f"(2) pooling over a single hand for n = {count_mean}: mean ± SEM = {pooled_mean:.2f} ± {sd_mean/np.sqrt(count_mean):.2f}")
+pooled_sd = counts[['Right','Left']].stack().std(ddof=1)
+pooled_count = counts[['Right','Left']].stack().count()
+print(f"(2) pooling over a single hand for n = {pooled_count}: mean ± SEM = {pooled_mean:.2f} ± {pooled_sd/np.sqrt(pooled_count):.2f}")
 
-## Noyce 2014 reported mean over a single hand 60.3 and CI = [57.6, 63.0]
-## calculating SEM:
-n = 93
+## They reported mean over a single hand 60.3 and CI = [57.6, 63.0]
+### to extract the SD:
+n2 = 93
 ci_upper = 63.0
-pop_mean = 60.3
-sd = (ci_upper - pop_mean)  * np.sqrt(n) / 1.96
-sem =  sd / np.sqrt(n)
-print(f"...Noyce et al., 2014 tested N = {n}\n...mean ± sem: {pop_mean:.2f} ± {sem:.2f}")
+mean2 = 60.3
+sd2 = (ci_upper - mean2)  * np.sqrt(n2) / 1.96
+sem2 =  sd2 / np.sqrt(n2)
+print(f"...they tested N = {n2}, {mean2:.2f} ± {sem2:.2f}")
 
-## two-sample unpaired t-test, one participant was removed
-t2 ,pval2 = ttest_ind_from_stats(pooled_mean, sd_mean, count_mean, 
-                               pop_mean, sd, n,
+## two-sample unpaired t-test, pooled over single hand taps
+t2 ,pval2 = ttest_ind_from_stats(pooled_mean, pooled_sd, pooled_count, 
+                               mean2, sd2, n2,
                                equal_var=False,
                                alternative='two-sided')
-bf2 = bayesfactor_ttest(t2, count_mean, n, paired=False, alternative='two-sided')
-print(f'......Pooled single hand:\ntwo-sample t-test: p = {pval2:.2f}, t = {t2:.2f}, BF = {bf2:.2f}')
+bf2 = bayesfactor_ttest(t2, pooled_count, n2, paired=False, alternative='two-sided')
+print(f'......Pooled single hand: Welch t-test: p = {pval2:.2f}, t = {t2:.2f}, BF = {bf2:.2f}')
       
 
 

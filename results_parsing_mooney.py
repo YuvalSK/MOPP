@@ -83,9 +83,8 @@ for subject in subjects:
     
     res_correct_u.append(p_u) # correct upright
     res_correct_i.append(p_i) # correct inverted
-    res_correct_s.append(p_s) # false alarm
+    res_correct_s.append(p_s) # false alarm       
 
-            
 del res_correct_u[15] #excluding one participant with repeated answer
 del res_correct_i[15]
 del res_correct_s[15]
@@ -100,6 +99,17 @@ error = [sem_u*100, sem_i*100, sem_s*100] / np.sqrt(len(res_correct_u))
 print(f"upright faces rate: {np.mean(res_correct_u)*100:.1f}% ± {error[0]:.1f}%")
 print(f"inverted faces: {np.mean(res_correct_i)*100:.1f}% ± {error[1]:.1f}%")
 print(f"random images rate: {np.mean(res_correct_s)*100:.1f}% ± {error[2]:.1f}%")
+
+#comparisons
+res = st.ttest_ind(res_correct_u, res_correct_i, alternative='greater')
+print(f"t({len(res_correct_u)+len(res_correct_i)-2}) = {res[0]}, p = {res[1]:.7f}")
+
+res = st.ttest_ind(res_correct_u, res_correct_s, alternative='greater')
+print(f"t({len(res_correct_u)+len(res_correct_s)-2}) = {res[0]}, p = {res[1]:.7f}")
+
+res = st.ttest_ind(res_correct_i, res_correct_s, alternative='greater')
+print(f"t({len(res_correct_i)+len(res_correct_s)-2}) = {res[0]}, p = {res[1]:.7f}")
+
 
 #visualiztion
 plt.rcParams.update({'font.size': 18})
@@ -126,14 +136,13 @@ With equal number of signal and noise trials:
     - add 0.5 to Hits and FA and 2*0.5 to number of signals and noise trials
 With unequal number of trials, as in our case, we need to consider the proportion of trials per condition
 '''
-n_s = stimuli.count("S")
-n_u = stimuli.count("U")
-n_i = stimuli.count("I")
 
-#proportion of signal and noise trials
+#balanced proportion of signal and noise trials
+n_s = stimuli.count("S") + 1
+n_u = stimuli.count("U") + 1
+n_i = stimuli.count("I") - 2
 signal_trials_u = n_u / (n_s + n_u)
 signal_trials_i = n_i / (n_s + n_i)
-
 noise_trials_u = 1 - signal_trials_u
 noise_trials_i = 1 - signal_trials_i
 
@@ -170,28 +179,23 @@ dmean_u, err_u = np.mean(u_vs_s), np.std(u_vs_s, ddof=1) / np.sqrt(len(u_vs_s))
 dmean_i, err_i = np.mean(u_vs_i), np.std(u_vs_i, ddof=1) / np.sqrt(len(u_vs_i))
 dmean_s, err_s = np.mean(i_vs_s), np.std(i_vs_s, ddof=1) / np.sqrt(len(i_vs_s))
 
-
-print(f'Upright vs scrambled: mean d ± SEM = {dmean_u:.2f} ± {err_u:.2f}')
-print(f'Upright vs inverted: mean d ± SEM = {dmean_i:.2f} ± {err_i:.2f}')
-print(f'Inverted vs. scrambeled: mean d ± SEM = {dmean_s:.2f} ± {err_s:.2f}')
-# Schwedrzik, 2018: 1.78 ± 0.45,
-#                   0.94 ± 0.26, 
-#                   0.83 ± 0.45 (mean and SD)
+print(f"our d'= {np.mean([u_vs_s,u_vs_i,i_vs_s]):.2f} ± {np.std([u_vs_s,u_vs_i,i_vs_s],ddof=1)/np.sqrt(len([u_vs_s,u_vs_i,i_vs_s])):.2f}")
+print(f"Schwiedrzik 2018: d'= 1.19 ± {0.30/np.sqrt(18):.2f} ")
+#print(f'Upright vs scrambled: mean d ± SEM = {dmean_u:.2f} ± {err_u:.2f}')
+#print(f'Upright vs inverted: mean d ± SEM = {dmean_i:.2f} ± {err_i:.2f}')
+#print(f'Inverted vs. scrambeled: mean d ± SEM = {dmean_s:.2f} ± {err_s:.2f}')
 
 # two-sample unpaired t-test, one participant was removed
-t ,pval = ttest_ind_from_stats(dmean_u, np.std(u_vs_s, ddof=1), (len(subjects)-1), 
-                               1.78, 0.45, 19,
+t ,pval = ttest_ind_from_stats(np.mean([u_vs_s,u_vs_i,i_vs_s]), 
+                               np.std([u_vs_s,u_vs_i,i_vs_s], ddof=1), 
+                               len([u_vs_s,u_vs_i,i_vs_s]), 
+                               1.19, 0.30, 18,
                                equal_var=False,
                                alternative='two-sided')
-bf = bayesfactor_ttest(t, (len(subjects)-1), 19, paired=False, alternative='two-sided')
-print(f'Upright vs. random:\ntwo-sample t-test: p = {pval:.2f}, t = {t:.2f}, BF = {bf:.2f}')
+bf = bayesfactor_ttest(t, (len([u_vs_s,u_vs_i,i_vs_s])), 18, paired=False, alternative='two-sided')
+print(f'Pooled:\ntwo-sample t-test: p = {pval:.3f}, t = {t:.3f}, BF = {bf:.3f}')
 
-t2 ,pval2 = ttest_ind_from_stats(dmean_s, np.std(i_vs_s, ddof=1), (len(subjects)-1), 
-                               0.83, 0.45, 19, 
-                               equal_var=False,
-                               alternative='two-sided')
-bf2 = bayesfactor_ttest(t2, (len(subjects)-1), 19, paired=False, alternative='two-sided')
-print(f'Inverted vs. random:\ntwo-sample t-test: p = {pval2:.2f}, t = {t2:.2f}, BF = {bf2:.2f}')
+
 
 
 ######################### additional draft code ##########################
@@ -205,6 +209,31 @@ print(f'Inverted vs. random:\ntwo-sample t-test: p = {pval2:.2f}, t = {t2:.2f}, 
 #data = np.array([u_vs_s, u_vs_i, i_vs_s])
 #print(f'Overall sensativity: mean d = {np.mean(data):.2f} SD {err_s:.2f}')
 #ttest_1samp(a = np.mean(data, axis=1), popmean=1.18, alternative='two-sided')
+
+# Schwedrzik, 2018: 1.78 ± 0.45,
+#                   0.94 ± 0.26, 
+#                   0.83 ± 0.45 (mean and SD)
+
+t1 ,pval1 = ttest_ind_from_stats(dmean_u, np.std(u_vs_s, ddof=1), len(u_vs_s), 
+                               1.78, 0.45, 19,
+                               equal_var=False,
+                               alternative='two-sided')
+bf1 = bayesfactor_ttest(t1, len(u_vs_s), 19, paired=False, alternative='two-sided')
+print(f'Upright vs. random:\ntwo-sample t-test: p = {pval1:.4f}, t = {t1:.2f}, BF = {bf1:.2f}')
+
+t2 ,pval2 = ttest_ind_from_stats(dmean_s, np.std(i_vs_s, ddof=1), len(i_vs_s), 
+                               0.94, 0.26, 19, 
+                               equal_var=False,
+                               alternative='two-sided')
+bf2 = bayesfactor_ttest(t2, len(i_vs_s), 19, paired=False, alternative='two-sided')
+print(f'Inverted vs. random:\ntwo-sample t-test: p = {pval2:.4f}, t = {t2:.2f}, BF = {bf2:.2f}')
+
+t3 ,pval3 = ttest_ind_from_stats(dmean_i, np.std(u_vs_i, ddof=1), len(u_vs_i), 
+                               0.83, 0.45, 19, 
+                               equal_var=False,
+                               alternative='two-sided')
+bf3 = bayesfactor_ttest(t3, len(u_vs_i), 19, paired=False, alternative='two-sided')
+print(f'Upright vs. inverted:\ntwo-sample t-test: p = {pval3:.4f}, t = {t3:.2f}, BF = {bf3:.2f}')
 
 #key-tapping stats
 import scipy.stats as st

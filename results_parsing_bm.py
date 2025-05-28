@@ -92,6 +92,12 @@ error = [(np.sqrt(len(res_correct_r)*q*(1-q))*100 / len(res_correct_r)), np.sqrt
 print(f"avg reporting BM ± SEM: {p*100:.1f}% ± {error[1]:.1f}%")
 print(f"avg reporting random ± SEM: {(1-q)*100:.1f}% ± {error[0]:.1f}%")
 
+#one-tailed tttest to see if BM higher than random
+rev_res_correct_r = [1-x for x in res_correct_r]
+res = st.ttest_rel(res_correct_b, rev_res_correct_r, alternative='greater')
+print(f"t() = {res[0]}, p = {res[1]:.7f}")
+ 
+
 #plot the mean data across participants
 X = ['Random', 'Biological']
 X_axis = np.arange(len(X))
@@ -116,21 +122,33 @@ print(f'Motion: mean {dmean_m:.2f} ± {err_m:.2f}')
 
 
 # one sample, more reliable given the large sample size of Weil et al., 2018
-t1, pval1 = st.ttest_1samp(a=m_vs_r, popmean=0.73, alternative='two-sided')
+t1, pval1 = st.ttest_1samp(a=m_vs_r, popmean=0.73, 
+                           alternative='two-sided')
 bf = bayesfactor_ttest(t1, len(subjects), 189, paired=False, alternative='two-sided')
-print(f'one-sample t-test: p = {pval1:.2f}, t = {t1:.2f}, BF = {bf:.2f}')
+print(f'one-sample t-test: p = {pval1:.2f}, t = {t1:.2f}, BF = {bf:.3f}')
 
-# two sample, for angry reviewer
-t2 ,pval2 = st.ttest_ind_from_stats(np.mean(m_vs_r), np.std(m_vs_r,ddof=1), len(subjects), 0.73, 0.1, 189, equal_var=False, alternative='two-sided')
-bf2 = bayesfactor_ttest(t2, len(subjects), 189, paired=False, alternative='two-sided')
-print(f'two-sample t-test: p = {pval2:.2f}, t = {t2:.2f}, BF = {bf2:.2f}')
+# two sample, for the (angry) reviewer #2
+##online sample
+sd2=0.01*np.sqrt(189) # SEM to SD
+t2 ,pval2 = st.ttest_ind_from_stats(np.mean(m_vs_r), np.std(m_vs_r,ddof=1), len(subjects), 
+                                    0.73, sd2, 189, 
+                                    equal_var=False, 
+                                    alternative='two-sided')
+bf2 = bayesfactor_ttest(t2, len(subjects), 189, 
+                        paired=False,  
+                        alternative='two-sided')
+print(f'two-sample t-test: p = {pval2:.2f}, t = {t2:.2f}, BF = {bf2:.3f}')
+
+##offline sample 
+sd3=0.03*np.sqrt(19) # SEM to SD
+t3 ,pval3 = st.ttest_ind_from_stats(np.mean(m_vs_r), np.std(m_vs_r,ddof=1), len(subjects), 
+                                    0.74, sd3, 19, 
+                                    equal_var=False, 
+                                    alternative='two-sided')
+bf3 = bayesfactor_ttest(t3, len(subjects), 19, 
+                        paired=False,  
+                        alternative='two-sided')
+print(f'two-sample t-test: p = {pval3:.2f}, t = {t3:.2f}, BF = {bf3:.3f}')
 
 
-
-'''
-draft code:
-#one-tailed tttest to see if BM higher than random
-rev_res_correct_r = [1-x for x in res_correct_r]
-st.ttest_ind(res_correct_b, rev_res_correct_r, alternative='greater')
-'''
-        
+       
